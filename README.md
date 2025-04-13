@@ -1,5 +1,19 @@
 # AEM WKND Sites Project
 
+ core/src/main/java/com/adobe/aem/guides/wknd/core/models/AuthorInfo.java
+ core/src/main/java/com/adobe/aem/guides/wknd/core/models/FormSearchModel.java
+ core/src/main/java/com/adobe/aem/guides/wknd/core/schedulers/ProcessPublishedPagesScheduler.java
+ core/src/main/java/com/adobe/aem/guides/wknd/core/schedulers/ProcessPublishedPagesSchedulerConfig.java
+ core/src/main/java/com/adobe/aem/guides/wknd/core/servlets/AuthorInfoServlet.java
+ core/src/main/java/com/adobe/aem/guides/wknd/core/servlets/FormSearchServlet.java
+ core/src/test/java/com/adobe/aem/guides/wknd/core/models/FormSearchModelTest.java
+ core/src/test/java/com/adobe/aem/guides/wknd/core/schedulers/ProcessPublishedPagesSchedulerTest.java
+ core/src/test/java/com/adobe/aem/guides/wknd/core/servlets/AuthorInfoServletTest.java
+ ui.apps/src/main/content/jcr_root/apps/wknd/components/formsearch/context.xml
+ ui.apps/src/main/content/jcr_root/apps/wknd/components/formsearch/form-search.html
+ ui.frontend/src/main/webpack/components/formsearch/formsearch.js
+ ui.frontend/src/main/webpack/components/formsearch/scss/formsearch.scss.css
+
 ## Adobe Experience Manager compatibility
 
 WKND versions are compatible with the following versions of Adobe Experience Manager:
