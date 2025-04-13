@@ -12,7 +12,7 @@
  ui.apps/src/main/content/jcr_root/apps/wknd/components/formsearch/context.xml
  ui.apps/src/main/content/jcr_root/apps/wknd/components/formsearch/form-search.html
  ui.frontend/src/main/webpack/components/formsearch/formsearch.js
- ui.frontend/src/main/webpack/components/formsearch/scss/formsearch.scss.css
+ ui.frontend/src/main/webpack/components/formsearch/scss/formsearch.scss
 
 ## Adobe Experience Manager compatibility
 
