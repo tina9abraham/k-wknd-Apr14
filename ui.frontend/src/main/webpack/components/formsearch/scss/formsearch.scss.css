@@ -1,0 +1,21 @@
+.form-search {
+    padding: 1rem;
+}
+
+@media (min-width: 768px) {
+    .form-search {
+        background-color: #f0f0f0;
+        color: black;
+    }
+}
+
+@media (max-width: 767px) {
+    .form-search {
+        background-color: black;
+        color: white;
+    }
+
+    .form-search input, .form-search button {
+        color: black;
+    }
+}

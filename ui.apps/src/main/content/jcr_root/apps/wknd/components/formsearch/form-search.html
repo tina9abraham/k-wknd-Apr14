@@ -1,0 +1,12 @@
+<sly data-sly-use.clientLib="/libs/granite/sightly/templates/clientlib.html"
+     data-sly-call="${clientLib.all @ categories='wknd.formsearch'}" />
+
+
+<div class="form-search" data-sly-use.model="com.wknd.core.models.FormSearchModel">
+    <form id="search-form">
+        <label>${model.inputLabel}</label>
+        <input type="text" name="query" id="search-input" />
+        <button type="submit">${model.buttonText}</button>
+    </form>
+    <div id="search-results"></div>
+</div>
