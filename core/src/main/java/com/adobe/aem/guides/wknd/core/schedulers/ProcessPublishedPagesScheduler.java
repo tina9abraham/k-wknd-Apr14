@@ -22,11 +22,14 @@ import org.apache.sling.commons.scheduler.ScheduleOptions;
 import org.apache.sling.commons.scheduler.Scheduler;
 import org.apache.sling.api.resource.*;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Map;
 
 @Component(service = Runnable.class, immediate = true)
 @Designate(ocd = ProcessPublishedPagesSchedulerConfig.class)
 public class ProcessPublishedPagesScheduler implements Runnable {
 
+	private static final Logger log = LoggerFactory.getLogger(ProcessPublishedPagesScheduler.class);
 
 	private Scheduler scheduler;
 
@@ -60,23 +63,34 @@ public class ProcessPublishedPagesScheduler implements Runnable {
 
     @Override
     public void run() {
+        // Only process in author mode
         if (!slingSettings.getRunModes().contains("author")) {
             return;
         }
-
-        try (ResourceResolver resolver = resolverFactory.getServiceResourceResolver(null)) {
-            Resource content = resolver.getResource("/content");
-            if (content != null) {
-                for (Resource page : content.getChildren()) {
-                    ModifiableValueMap properties = page.adaptTo(ModifiableValueMap.class);
-                    if (properties != null && "Activate".equals(properties.get("cq:lastReplicationAction"))) {
-                        properties.put("processedDate", Calendar.getInstance());
+        ResourceResolver resolver = null;
+        try {
+            Map<String, Object> authInfo = Collections.singletonMap(ResourceResolverFactory.SUBSERVICE, "publishedPageProcessorServiceUser");
+            resolver = resolverFactory.getServiceResourceResolver(authInfo);
+            // Query for published pages; for each page, do:
+            Resource page = resolver.getResource("/content/sample/en");
+            if (page != null) {
+                Resource jcrContent = page.getChild("jcr:content");
+                if (jcrContent != null) {
+                    ModifiableValueMap values = jcrContent.adaptTo(ModifiableValueMap.class);
+                    if (values != null) {
+                        values.put("processedDate", Instant.now().toString());
                     }
                 }
-                resolver.commit();
             }
+            // Commit the changes so that in-memory changes are persisted.
+            resolver.commit();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error processing published pages", e);
+        } finally {
+            if (resolver != null) {
+                resolver.close();
+            }
         }
     }
+
 }
