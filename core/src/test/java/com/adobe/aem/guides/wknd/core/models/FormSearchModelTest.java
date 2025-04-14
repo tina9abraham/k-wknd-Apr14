@@ -44,17 +44,19 @@ class FormSearchModelTest {
         assertNotNull(formSearchModel, "FormSearchModel should not be null after adaptation");
     }
 
-	/*
-	 * @Test void testButtonText() throws Exception { // Ensure buttonText is
-	 * initialized String buttonText = formSearchModel.getButtonText();
-	 * assertNotNull(buttonText, "Button text should not be null");
-	 * assertTrue(StringUtils.isNotBlank(buttonText),
-	 * "Button text should not be blank");
-	 * 
-	 * // Additional check: if there is a default value, assert it
-	 * assertEquals("Submit", buttonText,
-	 * "Button text should match the expected value"); }
-	 * 
+
+
+
+	 /*@Test void testButtonText() throws Exception { // Ensure buttonText is initialized
+	 String buttonText = formSearchModel.getButtonText();
+	 assertNotNull(buttonText, "Button text should not be null");
+	 assertTrue(StringUtils.isNotBlank(buttonText),
+	 "Button text should not be blank");
+
+	 // Additional check: if there is a default value, assert it
+	 assertEquals("Submit", buttonText,	 "Button text should match the expected value");
+	}*/
+	 /*
 	 * @Test void testInputLabel() throws Exception { // Ensure inputLabel is
 	 * initialized String inputLabel = formSearchModel.getInputLabel();
 	 * assertNotNull(inputLabel, "Input label should not be null");

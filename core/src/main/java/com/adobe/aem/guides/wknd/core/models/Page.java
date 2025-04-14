@@ -2,15 +2,12 @@ package com.adobe.aem.guides.wknd.core.models;
 
 import java.util.List;
 
-// Author.java
-public class Author {
-    private String firstName;
-    private String lastName;
+// Page.java
+public class Page {
+    private String title;
 
-    public Author(String firstName, String lastName) {
-        this.firstName = firstName;
-        this.lastName  = lastName;
+    public Page(String title) {
+        this.title = title;
     }
-    public String getFirstName() { return firstName; }
-    public String getLastName()  { return lastName; }
+    public String getTitle() { return title; }
 }

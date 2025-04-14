@@ -18,6 +18,7 @@ import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 
+import com.adobe.aem.guides.wknd.core.models.Author;
 import com.adobe.aem.guides.wknd.core.models.AuthorInfo;
 import com.day.cq.wcm.api.Page;
 import com.day.cq.wcm.api.PageFilter;
@@ -25,75 +26,96 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 
-@Component(service = Servlet.class,
-        property = {
-                Constants.SERVICE_DESCRIPTION + "=Author Info Servlet",
-                "sling.servlet.methods=GET",
-                "sling.servlet.resourceTypes=example/components/page",
-                "sling.servlet.extensions=json",
-                "sling.servlet.extensions=xml"
-        })
-public class AuthorInfoServlet extends SlingSafeMethodsServlet {
+// PageInfoServlet.java
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.*;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.List;
+import java.util.ArrayList;
 
-    private final ObjectMapper jsonMapper = new ObjectMapper();
-    private final XmlMapper xmlMapper = new XmlMapper();
+@WebServlet("/pageinfo")
+public class PageInfoServlet extends HttpServlet {
+
+    // In a real system these methods would query the repository
+    protected Author getAuthorForPage(String pageId) {
+        // Dummy implementation
+        return new Author("Default", "Author");
+    }
+
+    protected List<Page> getChildPagesModifiedByAuthor(String pageId, Author author) {
+        // Dummy implementation returns an empty list.
+        return new ArrayList<>();
+    }
 
     @Override
-    protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-
-        Resource resource = request.getResource();
-        Page page = resource.adaptTo(Page.class);
-
-        if (page == null) {
-            response.setStatus(SlingHttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("Resource is not a page.");
+        String pageId = req.getParameter("page");
+        if (pageId == null) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing 'page' parameter");
             return;
         }
 
-        String authorId = page.getProperties().get("jcr:lastModifiedBy", String.class);
-        String firstName = page.getProperties().get("firstName", "");
-        String lastName = page.getProperties().get("lastName", "");
+        Author author = getAuthorForPage(pageId);
+        List<Page> childPages = getChildPagesModifiedByAuthor(pageId, author);
 
-        if (StringUtils.isBlank(authorId)) {
-            response.setStatus(SlingHttpServletResponse.SC_NOT_FOUND);
-            response.getWriter().write("No lastModifiedBy found for page.");
-            return;
-        }
-
-        AuthorInfo authorInfo = new AuthorInfo();
-        authorInfo.setAuthorId(authorId);
-        authorInfo.setAuthorFirstName(firstName);
-        authorInfo.setAuthorLastName(lastName);
-        authorInfo.setModifiedChildPages(getModifiedChildPagePaths(page, authorId));
-
-        String ext = request.getRequestPathInfo().getExtension();
-
-        if ("json".equals(ext)) {
-            response.setContentType("application/json");
-            response.getWriter().write(jsonMapper.writeValueAsString(authorInfo));
-        } else if ("xml".equals(ext)) {
-            response.setContentType("application/xml");
-            response.getWriter().write(xmlMapper.writeValueAsString(authorInfo));
-        } else {
-            response.setStatus(SlingHttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);
-            response.getWriter().write("Unsupported extension. Use '.json' or '.xml'.");
-        }
-    }
-
-    private List<String> getModifiedChildPagePaths(Page parentPage, String authorId) {
-        List<String> modifiedPaths = new ArrayList<>();
-        Iterator<Page> children = parentPage.listChildren(new PageFilter(true, true));
-        while (children.hasNext()) {
-            Page child = children.next();
-            String modifiedBy = child.getProperties().get("jcr:lastModifiedBy", String.class);
-            if (authorId.equals(modifiedBy)) {
-                modifiedPaths.add(child.getPath());
+        // Determine response format. Format parameter takes precedence. If not provided, infer from the URI.
+        String format = req.getParameter("format");
+        if (format == null) {
+            String uri = req.getRequestURI();
+            if (uri != null && uri.endsWith(".xml")) {
+                format = "xml";
+            } else {
+                format = "json";
             }
         }
-        return modifiedPaths;
+
+        String output;
+        if ("xml".equalsIgnoreCase(format)) {
+            resp.setContentType("application/xml");
+            output = buildXmlOutput(author, childPages);
+        } else {
+            resp.setContentType("application/json");
+            output = buildJsonOutput(author, childPages);
+        }
+        PrintWriter out = resp.getWriter();
+        out.write(output);
     }
 
-    // Simple POJO for response mapping
-    
+    private String buildXmlOutput(Author author, List<Page> childPages) {
+        StringBuilder xml = new StringBuilder();
+        xml.append("<pageInfo>");
+        xml.append("<author>");
+        xml.append("<firstName>").append(author.getFirstName()).append("</firstName>");
+        xml.append("<lastName>").append(author.getLastName()).append("</lastName>");
+        xml.append("</author>");
+        xml.append("<childPages>");
+        for (Page child : childPages) {
+            xml.append("<page>").append(child.getTitle()).append("</page>");
+        }
+        xml.append("</childPages>");
+        xml.append("</pageInfo>");
+        return xml.toString();
+    }
+
+    private String buildJsonOutput(Author author, List<Page> childPages) {
+        StringBuilder json = new StringBuilder();
+        json.append("{");
+        json.append("\"author\":{");
+        json.append("\"firstName\":\"").append(author.getFirstName()).append("\",");
+        json.append("\"lastName\":\"").append(author.getLastName()).append("\"");
+        json.append("},");
+        json.append("\"childPages\":[");
+        for (int i = 0; i < childPages.size(); i++) {
+            json.append("\"").append(childPages.get(i).getTitle()).append("\"");
+            if (i < childPages.size() - 1) {
+                json.append(",");
+            }
+        }
+        json.append("]");
+        json.append("}");
+        return json.toString();
+    }
 }
