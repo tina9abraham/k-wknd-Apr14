@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProcessPublishedPagesScheduler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">WKND Sites Project - Core</a> &gt; <a href="index.source.html" class="el_package">com.adobe.aem.guides.wknd.core.schedulers</a> &gt; <span class="el_source">ProcessPublishedPagesScheduler.java</span></div><h1>ProcessPublishedPagesScheduler.java</h1><pre class="source lang-java linenums">package com.adobe.aem.guides.wknd.core.schedulers;
+
+import com.day.cq.replication.ReplicationStatus;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.metatype.annotations.Designate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.apache.sling.settings.SlingSettingsService;
+import org.apache.sling.settings.SlingSettingsService;
+import org.apache.sling.api.resource.ModifiableValueMap;
+
+import java.time.Instant;
+
+
+
+import org.apache.sling.commons.scheduler.ScheduleOptions;
+import org.apache.sling.commons.scheduler.Scheduler;
+import org.apache.sling.api.resource.*;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Map;
+
+@Component(service = Runnable.class, immediate = true)
+@Designate(ocd = ProcessPublishedPagesSchedulerConfig.class)
+<span class="fc" id="L30">public class ProcessPublishedPagesScheduler implements Runnable {</span>
+
+<span class="fc" id="L32">	private static final Logger log = LoggerFactory.getLogger(ProcessPublishedPagesScheduler.class);</span>
+
+	private Scheduler scheduler;
+
+	
+	private SlingSettingsService slingSettings;
+
+	
+	private ResourceResolverFactory resolverFactory;
+
+
+    private String schedulerExpression;
+    
+
+    @Activate
+    protected void activate(ProcessPublishedPagesSchedulerConfig config) {
+<span class="nc" id="L48">        this.schedulerExpression = config.scheduler_expression();</span>
+
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (!slingSettings.getRunModes().contains(&quot;author&quot;)) {</span>
+<span class="nc" id="L51">            return;</span>
+        }
+
+<span class="nc" id="L54">        ScheduleOptions options = scheduler.EXPR(schedulerExpression);</span>
+<span class="nc" id="L55">        options.name(&quot;ProcessPublishedPagesScheduler&quot;).canRunConcurrently(false);</span>
+<span class="nc" id="L56">        scheduler.schedule(this, options);</span>
+<span class="nc" id="L57">    }</span>
+
+    @Override
+    public void run() {
+        // Only process in author mode
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        if (!slingSettings.getRunModes().contains(&quot;author&quot;)) {</span>
+<span class="fc" id="L63">            return;</span>
+        }
+<span class="fc" id="L65">        ResourceResolver resolver = null;</span>
+        try {
+<span class="fc" id="L67">            Map&lt;String, Object&gt; authInfo = Collections.singletonMap(ResourceResolverFactory.SUBSERVICE, &quot;publishedPageProcessorServiceUser&quot;);</span>
+<span class="fc" id="L68">            resolver = resolverFactory.getServiceResourceResolver(authInfo);</span>
+            // Query for published pages; for each page, do:
+<span class="fc" id="L70">            Resource page = resolver.getResource(&quot;/content/sample/en&quot;);</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">            if (page != null) {</span>
+<span class="fc" id="L72">                Resource jcrContent = page.getChild(&quot;jcr:content&quot;);</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">                if (jcrContent != null) {</span>
+<span class="fc" id="L74">                    ModifiableValueMap values = jcrContent.adaptTo(ModifiableValueMap.class);</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">                    if (values != null) {</span>
+<span class="fc" id="L76">                        values.put(&quot;processedDate&quot;, Instant.now().toString());</span>
+                    }
+                }
+            }
+            // Commit the changes so that in-memory changes are persisted.
+<span class="fc" id="L81">            resolver.commit();</span>
+<span class="nc" id="L82">        } catch (Exception e) {</span>
+<span class="nc" id="L83">            log.error(&quot;Error processing published pages&quot;, e);</span>
+        } finally {
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">            if (resolver != null) {</span>
+<span class="fc" id="L86">                resolver.close();</span>
+            }
+        }
+<span class="fc" id="L89">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

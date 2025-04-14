@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthorInfoServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">WKND Sites Project - Core</a> &gt; <a href="index.source.html" class="el_package">com.adobe.aem.guides.wknd.core.servlets</a> &gt; <span class="el_source">AuthorInfoServlet.java</span></div><h1>AuthorInfoServlet.java</h1><pre class="source lang-java linenums">package com.adobe.aem.guides.wknd.core.servlets;
+
+
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.servlet.Servlet;
+import javax.servlet.ServletException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
+import org.osgi.framework.Constants;
+import org.osgi.service.component.annotations.Component;
+
+import com.adobe.aem.guides.wknd.core.models.AuthorInfo;
+import com.day.cq.wcm.api.Page;
+import com.day.cq.wcm.api.PageFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+
+
+@Component(service = Servlet.class,
+        property = {
+                Constants.SERVICE_DESCRIPTION + &quot;=Author Info Servlet&quot;,
+                &quot;sling.servlet.methods=GET&quot;,
+                &quot;sling.servlet.resourceTypes=example/components/page&quot;,
+                &quot;sling.servlet.extensions=json&quot;,
+                &quot;sling.servlet.extensions=xml&quot;
+        })
+<span class="fc" id="L36">public class AuthorInfoServlet extends SlingSafeMethodsServlet {</span>
+
+<span class="fc" id="L38">    private final ObjectMapper jsonMapper = new ObjectMapper();</span>
+<span class="fc" id="L39">    private final XmlMapper xmlMapper = new XmlMapper();</span>
+
+    @Override
+    protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response)
+            throws ServletException, IOException {
+
+<span class="fc" id="L45">        Resource resource = request.getResource();</span>
+<span class="fc" id="L46">        Page page = resource.adaptTo(Page.class);</span>
+
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (page == null) {</span>
+<span class="fc" id="L49">            response.setStatus(SlingHttpServletResponse.SC_BAD_REQUEST);</span>
+<span class="fc" id="L50">            response.getWriter().write(&quot;Resource is not a page.&quot;);</span>
+<span class="fc" id="L51">            return;</span>
+        }
+
+<span class="fc" id="L54">        String authorId = page.getProperties().get(&quot;jcr:lastModifiedBy&quot;, String.class);</span>
+<span class="fc" id="L55">        String firstName = page.getProperties().get(&quot;firstName&quot;, &quot;&quot;);</span>
+<span class="fc" id="L56">        String lastName = page.getProperties().get(&quot;lastName&quot;, &quot;&quot;);</span>
+
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        if (StringUtils.isBlank(authorId)) {</span>
+<span class="fc" id="L59">            response.setStatus(SlingHttpServletResponse.SC_NOT_FOUND);</span>
+<span class="fc" id="L60">            response.getWriter().write(&quot;No lastModifiedBy found for page.&quot;);</span>
+<span class="fc" id="L61">            return;</span>
+        }
+
+<span class="nc" id="L64">        AuthorInfo authorInfo = new AuthorInfo();</span>
+<span class="nc" id="L65">        authorInfo.setAuthorId(authorId);</span>
+<span class="nc" id="L66">        authorInfo.setAuthorFirstName(firstName);</span>
+<span class="nc" id="L67">        authorInfo.setAuthorLastName(lastName);</span>
+<span class="nc" id="L68">        authorInfo.setModifiedChildPages(getModifiedChildPagePaths(page, authorId));</span>
+
+<span class="nc" id="L70">        String ext = request.getRequestPathInfo().getExtension();</span>
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">        if (&quot;json&quot;.equals(ext)) {</span>
+<span class="nc" id="L73">            response.setContentType(&quot;application/json&quot;);</span>
+<span class="nc" id="L74">            response.getWriter().write(jsonMapper.writeValueAsString(authorInfo));</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        } else if (&quot;xml&quot;.equals(ext)) {</span>
+<span class="nc" id="L76">            response.setContentType(&quot;application/xml&quot;);</span>
+<span class="nc" id="L77">            response.getWriter().write(xmlMapper.writeValueAsString(authorInfo));</span>
+        } else {
+<span class="nc" id="L79">            response.setStatus(SlingHttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);</span>
+<span class="nc" id="L80">            response.getWriter().write(&quot;Unsupported extension. Use '.json' or '.xml'.&quot;);</span>
+        }
+<span class="nc" id="L82">    }</span>
+
+    private List&lt;String&gt; getModifiedChildPagePaths(Page parentPage, String authorId) {
+<span class="nc" id="L85">        List&lt;String&gt; modifiedPaths = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L86">        Iterator&lt;Page&gt; children = parentPage.listChildren(new PageFilter(true, true));</span>
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        while (children.hasNext()) {</span>
+<span class="nc" id="L88">            Page child = children.next();</span>
+<span class="nc" id="L89">            String modifiedBy = child.getProperties().get(&quot;jcr:lastModifiedBy&quot;, String.class);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">            if (authorId.equals(modifiedBy)) {</span>
+<span class="nc" id="L91">                modifiedPaths.add(child.getPath());</span>
+            }
+<span class="nc" id="L93">        }</span>
+<span class="nc" id="L94">        return modifiedPaths;</span>
+    }
+
+    // Simple POJO for response mapping
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

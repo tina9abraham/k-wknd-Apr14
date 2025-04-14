@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HelloWorldModel.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">WKND Sites Project - Core</a> &gt; <a href="index.source.html" class="el_package">com.adobe.aem.guides.wknd.core.models</a> &gt; <span class="el_source">HelloWorldModel.java</span></div><h1>HelloWorldModel.java</h1><pre class="source lang-java linenums">/*
+ *  Copyright 2015 Adobe Systems Incorporated
+ *
+ *  Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+package com.adobe.aem.guides.wknd.core.models;
+
+import static org.apache.sling.api.resource.ResourceResolver.PROPERTY_RESOURCE_TYPE;
+
+import javax.annotation.PostConstruct;
+
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.models.annotations.Default;
+import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
+import org.apache.sling.models.annotations.injectorspecific.SlingObject;
+import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
+
+import com.day.cq.wcm.api.Page;
+import com.day.cq.wcm.api.PageManager;
+
+import java.util.Optional;
+
+@Model(adaptables = Resource.class)
+<span class="fc" id="L36">public class HelloWorldModel {</span>
+
+    @ValueMapValue(name=PROPERTY_RESOURCE_TYPE, injectionStrategy=InjectionStrategy.OPTIONAL)
+    @Default(values=&quot;No resourceType&quot;)
+    protected String resourceType;
+
+    @SlingObject
+    private Resource currentResource;
+    @SlingObject
+    private ResourceResolver resourceResolver;
+
+    private String message;
+
+    @PostConstruct
+    protected void init() {
+<span class="fc" id="L51">        PageManager pageManager = resourceResolver.adaptTo(PageManager.class);</span>
+<span class="fc" id="L52">        String currentPagePath = Optional.ofNullable(pageManager)</span>
+<span class="fc" id="L53">                .map(pm -&gt; pm.getContainingPage(currentResource))</span>
+<span class="fc" id="L54">                .map(Page::getPath).orElse(&quot;&quot;);</span>
+
+<span class="fc" id="L56">        message = &quot;Hello World!\n&quot;</span>
+            + &quot;Resource type is: &quot; + resourceType + &quot;\n&quot;
+            + &quot;Current page is:  &quot; + currentPagePath + &quot;\n&quot;;
+<span class="fc" id="L59">    }</span>
+
+    public String getMessage() {
+<span class="fc" id="L62">        return message;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

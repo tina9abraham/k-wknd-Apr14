@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FormSearchServlet.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">WKND Sites Project - Core</a> &gt; <a href="index.source.html" class="el_package">com.adobe.aem.guides.wknd.core.servlets</a> &gt; <span class="el_source">FormSearchServlet.java</span></div><h1>FormSearchServlet.java</h1><pre class="source lang-java linenums">package com.adobe.aem.guides.wknd.core.servlets;
+
+import com.adobe.cq.wcm.core.components.models.Page;
+import com.day.cq.search.*;
+import com.day.cq.search.result.*;
+import com.google.gson.*;
+
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.SlingHttpServletResponse;
+import org.apache.sling.api.resource.*;
+import org.apache.sling.api.servlets.*;
+import org.osgi.service.component.annotations.*;
+import javax.jcr.*;
+import javax.servlet.Servlet;
+import javax.servlet.http.*;
+import java.io.IOException;
+import java.util.*;
+
+@Component(service = Servlet.class,
+           property = {
+               &quot;sling.servlet.paths=/bin/formsearch&quot;,
+               &quot;sling.servlet.methods=GET&quot;
+           })
+<span class="fc" id="L24">public class FormSearchServlet extends SlingAllMethodsServlet {</span>
+
+ 
+    private QueryBuilder queryBuilder;
+
+    @Override
+    protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
+<span class="fc" id="L31">        String term = request.getParameter(&quot;q&quot;);</span>
+
+<span class="fc" id="L33">        ResourceResolver resolver = request.getResourceResolver();</span>
+<span class="fc" id="L34">        Session session = resolver.adaptTo(Session.class);</span>
+
+<span class="fc" id="L36">        Map&lt;String, String&gt; queryMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L37">        queryMap.put(&quot;type&quot;, &quot;cq:Page&quot;);</span>
+<span class="fc" id="L38">        queryMap.put(&quot;group.p.or&quot;, &quot;true&quot;);</span>
+<span class="fc" id="L39">        queryMap.put(&quot;group.1_fulltext&quot;, term);</span>
+<span class="fc" id="L40">        queryMap.put(&quot;group.2_fulltext&quot;, term);</span>
+<span class="fc" id="L41">        queryMap.put(&quot;p.limit&quot;, &quot;20&quot;);</span>
+
+<span class="fc" id="L43">        Query query = queryBuilder.createQuery(PredicateGroup.create(queryMap), session);</span>
+<span class="fc" id="L44">        SearchResult result = query.getResult();</span>
+
+<span class="fc" id="L46">        JsonObject responseJson = new JsonObject();</span>
+<span class="fc" id="L47">        JsonArray resultsArray = new JsonArray();</span>
+
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        for (Hit hit : result.getHits()) {</span>
+            try {
+<span class="fc" id="L51">            	Resource pageResource = hit.getResource();</span>
+<span class="fc" id="L52">            	Resource contentRes = pageResource.getChild(&quot;jcr:content&quot;);</span>
+
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">            	if (contentRes != null) {</span>
+<span class="fc" id="L55">            	    ValueMap vm = contentRes.getValueMap();</span>
+
+<span class="fc" id="L57">            	    JsonObject obj = new JsonObject();</span>
+<span class="fc" id="L58">            	    obj.addProperty(&quot;title&quot;, vm.get(&quot;jcr:title&quot;, &quot;&quot;));</span>
+<span class="fc" id="L59">            	    obj.addProperty(&quot;description&quot;, vm.get(&quot;jcr:description&quot;, &quot;&quot;));</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">            	    obj.addProperty(&quot;lastModified&quot;, vm.get(&quot;cq:lastModified&quot;, Calendar.class) != null</span>
+<span class="fc" id="L61">            	        ? vm.get(&quot;cq:lastModified&quot;, Calendar.class).getTime().toString()</span>
+<span class="nc" id="L62">            	        : &quot;N/A&quot;);</span>
+<span class="fc" id="L63">            	    obj.addProperty(&quot;image&quot;, vm.get(&quot;image&quot;, &quot;&quot;));</span>
+
+<span class="fc" id="L65">            	    resultsArray.add(obj);</span>
+            	}
+<span class="pc" id="L67">            } catch (Exception ignored) {}</span>
+<span class="fc" id="L68">        }</span>
+
+<span class="fc" id="L70">        responseJson.add(&quot;results&quot;, resultsArray);</span>
+<span class="fc" id="L71">        response.setContentType(&quot;application/json&quot;);</span>
+<span class="fc" id="L72">        response.getWriter().write(responseJson.toString());</span>
+<span class="fc" id="L73">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

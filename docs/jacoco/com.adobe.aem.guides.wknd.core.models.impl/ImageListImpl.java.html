@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImageListImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">WKND Sites Project - Core</a> &gt; <a href="index.source.html" class="el_package">com.adobe.aem.guides.wknd.core.models.impl</a> &gt; <span class="el_source">ImageListImpl.java</span></div><h1>ImageListImpl.java</h1><pre class="source lang-java linenums">/*
+ *  Copyright 2019 Adobe Systems Incorporated
+ *
+ *  Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+package com.adobe.aem.guides.wknd.core.models.impl;
+
+import com.adobe.aem.guides.wknd.core.models.ImageList;
+import com.adobe.cq.wcm.core.components.models.Image;
+import com.adobe.cq.wcm.core.components.models.datalayer.ComponentData;
+import com.adobe.cq.wcm.core.components.models.datalayer.builder.DataLayerBuilder;
+import com.adobe.cq.wcm.core.components.util.ComponentUtils;
+import com.day.cq.commons.jcr.JcrConstants;
+import com.day.cq.search.Predicate;
+import com.day.cq.search.PredicateConverter;
+import com.day.cq.search.PredicateGroup;
+import com.day.cq.search.QueryBuilder;
+import com.day.cq.search.eval.JcrPropertyPredicateEvaluator;
+import com.day.cq.search.eval.PathPredicateEvaluator;
+import com.day.cq.search.eval.TypePredicateEvaluator;
+import com.day.cq.wcm.api.Page;
+import com.day.cq.wcm.api.PageManager;
+import com.day.cq.wcm.api.components.ComponentContext;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.sling.api.SlingHttpServletRequest;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceWrapper;
+import org.apache.sling.api.resource.ValueMap;
+import org.apache.sling.api.wrappers.ValueMapDecorator;
+import org.apache.sling.jcr.resource.api.JcrResourceConstants;
+import org.apache.sling.models.annotations.DefaultInjectionStrategy;
+import org.apache.sling.models.annotations.Model;
+import org.apache.sling.models.annotations.Required;
+import org.apache.sling.models.annotations.Via;
+import org.apache.sling.models.annotations.injectorspecific.OSGiService;
+import org.apache.sling.models.annotations.injectorspecific.ScriptVariable;
+import org.apache.sling.models.annotations.injectorspecific.Self;
+import org.apache.sling.models.annotations.via.ResourceSuperType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import javax.jcr.Session;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Model(
+        adaptables = {SlingHttpServletRequest.class},
+        adapters = {ImageList.class},
+        resourceType = {ImageListImpl.RESOURCE_TYPE},
+        defaultInjectionStrategy = DefaultInjectionStrategy.OPTIONAL
+)
+<span class="fc" id="L69">public class ImageListImpl implements ImageList {</span>
+<span class="fc" id="L70">    private static final Logger log = LoggerFactory.getLogger(ImageListImpl.class);</span>
+
+    protected static final String RESOURCE_TYPE = &quot;wknd/components/image-list&quot;;
+
+    @Self
+    @Required
+    private SlingHttpServletRequest request;
+
+    @OSGiService
+    @Required
+    private QueryBuilder queryBuilder;
+
+    @ScriptVariable
+    private Page currentPage;
+
+    @ScriptVariable
+    protected ComponentContext componentContext;
+
+    /**
+     * The Image List Component extends the AEM WCM Core Component.
+     * This injection creates an instance of the Core Components List component, and allows its methods to be called by
+     * the WKND Image List component, following the delegation pattern.
+     *
+     * Note this is made @Optional to allow for Unit Testing of this Sling Model.
+     */
+    @Self
+    @Via(type = ResourceSuperType.class)
+    private com.adobe.cq.wcm.core.components.models.List coreList;
+
+    private List&lt;ImageList.ListItem&gt; imageListItems;
+
+    @Override
+    public final Collection&lt;ImageList.ListItem&gt; getListItems() {
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (imageListItems == null) {</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            if (coreList == null) {</span>
+<span class="fc" id="L105">                log.warn(&quot;Could not locate the AEM WCM Core Components List SlingModel via this component's ResourceSuperType. Returning an empty list.&quot;);</span>
+<span class="fc" id="L106">                imageListItems = Collections.EMPTY_LIST;</span>
+            } else {
+                // Calls the AEM WCM Core Components List component's `getListItems()` methods, transforms them into ImageListItem objects.
+<span class="fc" id="L109">                imageListItems = coreList.getListItems().stream()</span>
+<span class="fc" id="L110">                        .map(listItem -&gt; new ImageListItemImpl(request.getResourceResolver(), listItem, getId()))</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">                        .filter(imageListItem -&gt; !imageListItem.isEmpty())</span>
+<span class="fc" id="L112">                        .collect(Collectors.toList());</span>
+            }
+        }
+
+<span class="fc" id="L116">        return Collections.unmodifiableList(imageListItems);</span>
+    }
+
+    @Override
+    public final boolean isEmpty() {
+<span class="fc" id="L121">        return getListItems().isEmpty();</span>
+    }
+
+    @Override
+    public String getId() {
+<span class="fc" id="L126">        Resource imageListResource = this.request.getResource();</span>
+<span class="fc" id="L127">        return ComponentUtils.getId(imageListResource, this.currentPage, this.componentContext);</span>
+    }
+
+    @Override
+    public ComponentData getData() {
+<span class="fc" id="L132">        Resource imageListResource = this.request.getResource();</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (ComponentUtils.isDataLayerEnabled(imageListResource)) {</span>
+<span class="fc" id="L134">            return DataLayerBuilder.forComponent()</span>
+<span class="fc" id="L135">                .withId(() -&gt; getId())</span>
+<span class="fc" id="L136">                .withType(() -&gt; RESOURCE_TYPE)</span>
+<span class="fc" id="L137">                .build();</span>
+        }
+<span class="fc" id="L139">        return null;</span>
+    }
+
+    private class ImageListItemImpl implements ImageList.ListItem {
+        private static final String IMAGE_RESOURCE_TYPE = &quot;wknd/components/image&quot;;
+        private static final String IMAGE_LIST_ITEM_SUFFIX = &quot;image-list-item&quot;;
+
+        private final com.adobe.cq.wcm.core.components.models.ListItem wrappedListItem;
+        private final Resource image;
+        private final Page page;
+        private final String parentId;
+
+        public ImageListItemImpl(final ResourceResolver resourceResolver,
+                                 final com.adobe.cq.wcm.core.components.models.ListItem listItem,
+<span class="fc" id="L153">                                 final String parentId) {</span>
+
+<span class="fc" id="L155">            final PageManager pageManager = resourceResolver.adaptTo(PageManager.class);</span>
+<span class="fc" id="L156">            this.wrappedListItem = listItem;</span>
+<span class="fc" id="L157">            this.parentId = parentId;</span>
+<span class="fc" id="L158">            this.page = pageManager.getContainingPage(wrappedListItem.getPath());</span>
+
+<span class="fc" id="L160">            image = findPageComponentResources(this.page, IMAGE_RESOURCE_TYPE, 1).stream()</span>
+<span class="fc" id="L161">                    .map(r -&gt; new SimpleImageComponentResource(r, getTitle()))</span>
+<span class="fc" id="L162">                    .findFirst()</span>
+<span class="fc" id="L163">                    .orElse(null);</span>
+<span class="fc" id="L164">        }</span>
+
+        public final Resource getImage() {
+<span class="fc" id="L167">            return image;</span>
+        }
+
+        @Override
+        public String getTitle() {
+<span class="fc" id="L172">            return wrappedListItem.getTitle();</span>
+        }
+
+        @Override
+        public String getDescription() {
+<span class="fc" id="L177">            return this.page.getProperties().get(&quot;shortDescription&quot;, this.page.getDescription());</span>
+        }
+
+        @Override
+        public String getURL() {
+<span class="fc" id="L182">            return wrappedListItem.getURL();</span>
+        }
+
+        public boolean isEmpty() {
+<span class="fc bfc" id="L186" title="All 2 branches covered.">            return getImage() == null;</span>
+        }
+
+        @Override
+        public ComponentData getData() {
+<span class="fc bfc" id="L191" title="All 2 branches covered.">            if (ComponentUtils.isDataLayerEnabled(image)) {</span>
+<span class="fc" id="L192">                return DataLayerBuilder.forComponent()</span>
+<span class="fc" id="L193">                    .withId(this::getId)</span>
+<span class="fc" id="L194">                    .withType(() -&gt; ImageListImpl.RESOURCE_TYPE + &quot;/&quot;  + IMAGE_LIST_ITEM_SUFFIX)</span>
+<span class="fc" id="L195">                    .withTitle(this::getTitle)</span>
+<span class="fc" id="L196">                    .withDescription(this::getDescription)</span>
+<span class="fc" id="L197">                    .withLinkUrl(this::getURL)</span>
+<span class="fc" id="L198">                    .withParentId(() -&gt; this.parentId)</span>
+<span class="fc" id="L199">                    .build();</span>
+                }
+<span class="fc" id="L201">            return null;</span>
+        }
+
+        @Override
+        public String getId() {
+<span class="fc" id="L206">            return ComponentUtils.generateId(StringUtils.join(parentId, ComponentUtils.ID_SEPARATOR, IMAGE_LIST_ITEM_SUFFIX), getURL());</span>
+        }
+    }
+
+    /**
+     * Helper method that searches an AEM Page for 1 or more resources that are of a specified sling:resourceType.
+     *
+     * Note the order is by JCR Path, ascending.
+     *
+     * @param page the AEM Page to search
+     * @param slingResourceType The sling:resourceType too look for
+     * @param limit the max number of resources to return
+     * @return A list of resources that have a match sling:resourceType value
+     */
+    protected java.util.List&lt;Resource&gt; findPageComponentResources(final Page page, final String slingResourceType, int limit) {
+<span class="fc" id="L221">        final java.util.List&lt;Resource&gt; componentResources = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L223" title="All 2 branches covered.">        if (page == null) {</span>
+            // If page is null, there is no where to search
+<span class="fc" id="L225">            return componentResources;</span>
+        }
+
+<span class="fc" id="L228">        Map&lt;String, String&gt; params = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L229">        params.put(PathPredicateEvaluator.PATH, page.getContentResource().getPath());</span>
+<span class="fc" id="L230">        params.put(TypePredicateEvaluator.TYPE, JcrConstants.NT_UNSTRUCTURED);</span>
+<span class="fc" id="L231">        params.put(JcrPropertyPredicateEvaluator.PROPERTY, JcrResourceConstants.SLING_RESOURCE_TYPE_PROPERTY);</span>
+<span class="fc" id="L232">        params.put(JcrPropertyPredicateEvaluator.PROPERTY + &quot;.&quot; + JcrPropertyPredicateEvaluator.VALUE, slingResourceType);</span>
+<span class="fc" id="L233">        params.put(PredicateConverter.GROUP_PARAMETER_PREFIX + &quot;.&quot; + PredicateGroup.PARAM_LIMIT, String.valueOf(limit));</span>
+<span class="fc" id="L234">        params.put(PredicateConverter.GROUP_PARAMETER_PREFIX + &quot;.&quot; +  PredicateGroup.PARAM_GUESS_TOTAL, &quot;true&quot;);</span>
+<span class="fc" id="L235">        params.put(Predicate.ORDER_BY, &quot;@jcr:path&quot;);</span>
+<span class="fc" id="L236">        params.put(Predicate.ORDER_BY + &quot;.&quot; + Predicate.PARAM_SORT , Predicate.SORT_ASCENDING);</span>
+
+<span class="fc" id="L238">        final long start = System.currentTimeMillis();</span>
+
+<span class="fc" id="L240">        final Iterator&lt;Resource&gt; resources = queryBuilder.createQuery(PredicateGroup.create(Collections.unmodifiableMap(params)),</span>
+<span class="fc" id="L241">                request.getResourceResolver().adaptTo(Session.class)).getResult().getResources();</span>
+
+        // Handle QueryBuilder's leakingResourceResolver; Make sure to close it manually.
+<span class="fc" id="L244">        ResourceResolver leakingResourceResolver = null;</span>
+
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        while(resources.hasNext()) {</span>
+<span class="fc" id="L247">            final Resource resource = resources.next();</span>
+
+<span class="pc bpc" id="L249" title="1 of 2 branches missed.">            if (leakingResourceResolver == null) {</span>
+<span class="fc" id="L250">                leakingResourceResolver = resource.getResourceResolver();</span>
+            }
+
+<span class="fc" id="L253">            componentResources.add(request.getResourceResolver().getResource(resource.getPath()));</span>
+<span class="fc" id="L254">        }</span>
+
+<span class="fc bfc" id="L256" title="All 2 branches covered.">        if (leakingResourceResolver != null) {</span>
+<span class="fc" id="L257">            leakingResourceResolver.close();</span>
+        }
+
+<span class="fc" id="L260">        log.debug(&quot;Query searching for component of type [ {} ] over [ {} ] took [ {} ms ]&quot;, slingResourceType, page.getContentResource().getPath(), System.currentTimeMillis() - start);</span>
+
+<span class="fc" id="L262">        return componentResources;</span>
+    }
+
+    /**
+     * ResourceWrapper which is used to include an Image Component content resource, and ensure it's authored configuration does not conflict with the desired renditioning for the Image List component.
+     * The Image List component should ONLY display the image without captions, titles, etc.
+     *
+     * Note that this resource wrapper will not effect the Image Component's style, which is dictated at the policy level.
+     */
+    protected static class SimpleImageComponentResource extends ResourceWrapper {
+        private static final String PN_FILE_REFERENCE = &quot;fileReference&quot;;
+        private static final String PN_ALT = &quot;alt&quot;;
+
+<span class="fc" id="L275">        private ValueMap properties = new ValueMapDecorator(new HashMap&lt;&gt;());</span>
+
+        public SimpleImageComponentResource(final Resource resource, final String alt) {
+<span class="fc" id="L278">            super(resource);</span>
+
+            // Copy the properties from the original image
+<span class="fc" id="L281">            properties.putAll(resource.getValueMap());</span>
+
+            // Override the decorative configuration attributes
+<span class="fc" id="L284">            properties.put(PN_ALT, alt);</span>
+<span class="fc" id="L285">            properties.put(Image.PN_IS_DECORATIVE, false);</span>
+<span class="fc" id="L286">            properties.put(Image.PN_DISPLAY_POPUP_TITLE, true);</span>
+<span class="fc" id="L287">            properties.put(Image.PN_TITLE_VALUE_FROM_DAM, false);</span>
+<span class="fc" id="L288">            properties.put(Image.PN_ALT_VALUE_FROM_DAM, false);</span>
+<span class="fc" id="L289">        }</span>
+
+        @Override
+        public ValueMap getValueMap() {
+<span class="fc" id="L293">            return properties;</span>
+        }
+
+        @Override
+        public &lt;AdapterType&gt; AdapterType adaptTo(Class&lt;AdapterType&gt; type) {
+<span class="fc bfc" id="L298" title="All 2 branches covered.">            if (type != ValueMap.class) {</span>
+<span class="fc" id="L299">                return super.adaptTo(type);</span>
+            }
+
+<span class="fc" id="L302">            return (AdapterType) getValueMap();</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>
