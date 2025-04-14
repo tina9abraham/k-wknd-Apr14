@@ -43,11 +43,6 @@ public class ProcessPublishedPagesScheduler implements Runnable {
     private String schedulerExpression;
 
 
-	public ResourceResolverFactory resourceResolverFactory;
-
-
-	public SlingSettingsService settingsService;
-
     @Activate
     protected void activate(ProcessPublishedPagesSchedulerConfig config) {
         this.schedulerExpression = config.scheduler_expression();
