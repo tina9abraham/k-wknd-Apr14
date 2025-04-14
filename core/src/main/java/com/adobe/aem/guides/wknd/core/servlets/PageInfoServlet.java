@@ -38,7 +38,7 @@ import java.util.ArrayList;
 @WebServlet("/pageinfo")
 public class PageInfoServlet extends HttpServlet {
 
-    // In a real system these methods would query the repository
+    // Instead of JCR repo
     protected Author getAuthorForPage(String pageId) {
         // Dummy implementation
         return new Author("Default", "Author");
@@ -61,7 +61,7 @@ public class PageInfoServlet extends HttpServlet {
         Author author = getAuthorForPage(pageId);
         List<Page> childPages = getChildPagesModifiedByAuthor(pageId, author);
 
-        // Determine response format. Format parameter takes precedence. If not provided, infer from the URI.
+        // Find file format
         String format = req.getParameter("format");
         if (format == null) {
             String uri = req.getRequestURI();
