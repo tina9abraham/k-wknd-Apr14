@@ -5,7 +5,7 @@ import org.osgi.service.metatype.annotations.AttributeDefinition;
 
 @ObjectClassDefinition(name = "Process Published Pages Scheduler Configuration")
 public @interface ProcessPublishedPagesSchedulerConfig {
-
+//Run scheduler every 2 min
     @AttributeDefinition(name = "CRON Expression", description = "CRON schedule for this job")
     String scheduler_expression() default "0 0/2 * * * ?";
 }
