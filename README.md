@@ -1,5 +1,5 @@
 # AEM WKND Sites Project
-
+ core/src/main/java/com/adobe/aem/guides/wknd/core/models/Author.java
  core/src/main/java/com/adobe/aem/guides/wknd/core/models/AuthorInfo.java
  core/src/main/java/com/adobe/aem/guides/wknd/core/models/FormSearchModel.java
  core/src/main/java/com/adobe/aem/guides/wknd/core/schedulers/ProcessPublishedPagesScheduler.java
