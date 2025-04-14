@@ -2,6 +2,7 @@
  core/src/main/java/com/adobe/aem/guides/wknd/core/models/Author.java
  core/src/main/java/com/adobe/aem/guides/wknd/core/models/AuthorInfo.java
  core/src/main/java/com/adobe/aem/guides/wknd/core/models/FormSearchModel.java
+ core/src/main/java/com/adobe/aem/guides/wknd/core/models/Page.java
  core/src/main/java/com/adobe/aem/guides/wknd/core/schedulers/ProcessPublishedPagesScheduler.java
  core/src/main/java/com/adobe/aem/guides/wknd/core/schedulers/ProcessPublishedPagesSchedulerConfig.java
  core/src/main/java/com/adobe/aem/guides/wknd/core/servlets/AuthorInfoServlet.java
