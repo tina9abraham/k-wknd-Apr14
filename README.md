@@ -1,4 +1,6 @@
 # AEM WKND Sites Project
+
+
  core/src/main/java/com/adobe/aem/guides/wknd/core/models/Author.java
  core/src/main/java/com/adobe/aem/guides/wknd/core/models/AuthorInfo.java
  core/src/main/java/com/adobe/aem/guides/wknd/core/models/FormSearchModel.java
@@ -14,6 +16,10 @@
  ui.apps/src/main/content/jcr_root/apps/wknd/components/formsearch/form-search.html
  ui.frontend/src/main/webpack/components/formsearch/formsearch.js
  ui.frontend/src/main/webpack/components/formsearch/scss/formsearch.scss
+
+ Jacoco report:
+ https://tina9abraham.github.io/k-wknd-Apr14/index.html
+
 
 ## Adobe Experience Manager compatibility
 
