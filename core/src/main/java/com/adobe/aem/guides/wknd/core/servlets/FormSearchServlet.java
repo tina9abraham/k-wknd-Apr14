@@ -4,6 +4,8 @@ import com.adobe.cq.wcm.core.components.models.Page;
 import com.day.cq.search.*;
 import com.day.cq.search.result.*;
 import com.google.gson.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;

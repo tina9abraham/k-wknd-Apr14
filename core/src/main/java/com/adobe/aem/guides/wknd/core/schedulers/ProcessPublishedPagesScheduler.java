@@ -29,15 +29,15 @@ import java.util.Map;
 @Designate(ocd = ProcessPublishedPagesSchedulerConfig.class)
 public class ProcessPublishedPagesScheduler implements Runnable {
 
-	private static final Logger log = LoggerFactory.getLogger(ProcessPublishedPagesScheduler.class);
+    private static final Logger log = LoggerFactory.getLogger(ProcessPublishedPagesScheduler.class);
 
-	private Scheduler scheduler;
+    private Scheduler scheduler;
 
-	
-	private SlingSettingsService slingSettings;
 
-	
-	private ResourceResolverFactory resolverFactory;
+    private SlingSettingsService slingSettings;
+
+
+    private ResourceResolverFactory resolverFactory;
 
 
     private String schedulerExpression;
@@ -69,14 +69,20 @@ public class ProcessPublishedPagesScheduler implements Runnable {
             // Query for published pages; for each page, do:
             Resource page = resolver.getResource("/content/sample/en");
             if (page != null) {
-                Resource jcrContent = page.getChild("jcr:content");
-                if (jcrContent != null) {
-                    ModifiableValueMap values = jcrContent.adaptTo(ModifiableValueMap.class);
-                    if (values != null) {
-                        values.put("processedDate", Instant.now().toString());
+                ReplicationStatus replicationStatus = page.adaptTo(ReplicationStatus.class);
+                if (replicationStatus != null && replicationStatus.isActivated()) {
+                    Resource jcrContent = page.getChild("jcr:content");
+                    if (jcrContent != null) {
+                        ModifiableValueMap values = jcrContent.adaptTo(ModifiableValueMap.class);
+                        if (values != null) {
+                            values.put("processedDate", Instant.now().toString());
+                        }
                     }
+                } else {
+                    log.info("Page is not published. Skipping: {}", page.getPath());
                 }
             }
+
             // Commit the changes so that in-memory changes are persisted.
             resolver.commit();
         } catch (Exception e) {

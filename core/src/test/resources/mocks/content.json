@@ -1,7 +1,16 @@
 {
   "sample": {
     "en": {
-      "jcr:content": {}
+      "jcr:content": {
+        "jcr:title": "Sample Page",
+        "jcr:description": "This is a sample page description.",
+        "jcr:created": "2025-04-16T00:00:00.000Z",
+        "jcr:creator": "admin",
+        "cq:lastModified": "2025-04-16T00:00:00.000Z",
+        "cq:lastModifiedBy": "admin",
+        "sling:resourceType": "wknd/components/page",
+        "processedDate": null
+      }
     }
   }
 }

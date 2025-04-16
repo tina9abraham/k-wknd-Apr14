@@ -1,56 +1,41 @@
 package com.adobe.aem.guides.wknd.core.servlets;
 
-
-
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.sling.api.SlingHttpServletRequest;
 import org.apache.sling.api.SlingHttpServletResponse;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.servlets.SlingSafeMethodsServlet;
-import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 
 import com.adobe.aem.guides.wknd.core.models.Author;
-import com.adobe.aem.guides.wknd.core.models.AuthorInfo;
 import com.day.cq.wcm.api.Page;
-import com.day.cq.wcm.api.PageFilter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
+// OSGi Component Servlet
+@Component(service = Servlet.class, property = {
+        "sling.servlet.resourceTypes=wknd/components/servlets/pageinfo",
+        "sling.servlet.methods=GET"
+})
+public class PageInfoServlet extends SlingSafeMethodsServlet {
 
-// PageInfoServlet.java
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.*;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.List;
-import java.util.ArrayList;
-
-@WebServlet("/pageinfo")
-public class PageInfoServlet extends HttpServlet {
-
-    // Instead of JCR repo
+    // Dummy implementation to return an Author based on a page ID
     protected Author getAuthorForPage(String pageId) {
-        // Dummy implementation
         return new Author("Default", "Author");
     }
 
+    // Dummy implementation to return a list of child pages
     protected List<Page> getChildPagesModifiedByAuthor(String pageId, Author author) {
-        // Dummy implementation returns an empty list.
         return new ArrayList<>();
     }
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+    protected void doGet(SlingHttpServletRequest req, SlingHttpServletResponse resp)
             throws ServletException, IOException {
         String pageId = req.getParameter("page");
         if (pageId == null) {
@@ -61,7 +46,7 @@ public class PageInfoServlet extends HttpServlet {
         Author author = getAuthorForPage(pageId);
         List<Page> childPages = getChildPagesModifiedByAuthor(pageId, author);
 
-        // Find file format
+        // Determine file format (default to JSON)
         String format = req.getParameter("format");
         if (format == null) {
             String uri = req.getRequestURI();
@@ -80,6 +65,7 @@ public class PageInfoServlet extends HttpServlet {
             resp.setContentType("application/json");
             output = buildJsonOutput(author, childPages);
         }
+
         PrintWriter out = resp.getWriter();
         out.write(output);
     }
