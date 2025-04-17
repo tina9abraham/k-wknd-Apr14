@@ -4,6 +4,8 @@ import com.adobe.cq.wcm.core.components.models.Page;
 import com.day.cq.search.*;
 import com.day.cq.search.result.*;
 import com.google.gson.*;
+import org.apache.commons.lang3.StringUtils;
+import org.osgi.service.metatype.annotations.Designate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,18 +21,19 @@ import java.io.IOException;
 import java.util.*;
 
 @Component(service = Servlet.class,
-           property = {
-               "sling.servlet.paths=/bin/formsearch",
-               "sling.servlet.methods=GET"
-           })
+        property = {
+                "sling.servlet.resourceTypes=com/adobe/aem/guides/wknd/core/components/formsearch",
+                "sling.servlet.methods=GET"
+        })
 public class FormSearchServlet extends SlingAllMethodsServlet {
 
- 
     private QueryBuilder queryBuilder;
 
     @Override
     protected void doGet(SlingHttpServletRequest request, SlingHttpServletResponse response) throws IOException {
         String term = request.getParameter("q");
+        if (StringUtils.isBlank(term))
+            return;
 
         ResourceResolver resolver = request.getResourceResolver();
         Session session = resolver.adaptTo(Session.class);
